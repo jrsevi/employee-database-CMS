@@ -1,5 +1,5 @@
 const inquirer = require('inquirer');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 
 const db = mysql.createConnection({
     host: 'localhost',
@@ -8,37 +8,34 @@ const db = mysql.createConnection({
     database: 'employee_db'
 });
 
+
 function viewEmployees() {
- const query= `SELECT employee.id, employee.first_name, employee.last_name, role.title AS role, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager_name
- FROM employee
- INNER JOIN role ON employee.role_id = role.id
- INNER JOIN department ON role.department_id = department.id
- LEFT JOIN employee manager ON employee.manager_id = manager.id`;
+    const query = `
+    SELECT employee.id, employee.first_name, employee.last_name, department.name AS department, role.title AS role, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager_name
+    FROM employee
+    INNER JOIN role ON employee.role_id = role.id
+    INNER JOIN department ON role.department_id = department.id
+    LEFT JOIN employee AS manager ON employee.manager_id = manager.id`;
 
- db.query(query, function(err, res) {
-    if (err) {
-        console.log(err);
-        init();
-    } else {
-        console.table(res);
-        init();
-    }
-    });
-
-
-}
-
-function viewDepartments() {
-    db.qeury(`SELECT role.id, title 'role', salary, department.name 'department' 
-    FROM role 
-    JOIN department 
-    ON role.department_id = department.id`,
-    function(err, res) {
+    db.query(query, function (err, results) {
         if (err) {
             console.log(err);
             init();
         } else {
-            console.table(res);
+            console.table(results);
+            init();
+        }
+    });
+}
+
+function viewDepartments() {
+    db.query(`SELECT id, name 'department' FROM department`, function (err, results) {
+        if (err) {
+            console.log(err);
+            init();
+
+        } else {
+            console.table(results);
             init();
         }
     });
@@ -251,7 +248,7 @@ function updateRole() {
     });
 }
 
-// initializes the application
+// RESULT: initializes the application
 function init() {
     inquirer.prompt(
         {
